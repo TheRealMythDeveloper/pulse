@@ -1,6 +1,15 @@
 
 import * as vscode from "vscode";
 
+interface PulseEvent {
+    id: string;
+    type: string;
+    description: string;
+    timestamp: string;
+}
+
+const STORAGE_KEY = "pulse.activity";
+
 export function activate(context: vscode.ExtensionContext) {
     const openDashboard = vscode.commands.registerCommand(
         "pulse.openDashboard",
@@ -17,7 +26,53 @@ export function activate(context: vscode.ExtensionContext) {
                 }
             );
 
-            panel.webview.html = getDashboardHTML(panel.webview, context.extensionUri);
+            panel.webview.html = getDashboardHTML(
+                panel.webview,
+                context.extensionUri
+            );
+
+            panel.webview.onDidReceiveMessage(async message => {
+                if (message.type === "ready") {
+                    const events = context.globalState.get<PulseEvent[]>(
+                        STORAGE_KEY,
+                        []
+                    );
+
+                    panel.webview.postMessage({
+                        type: "activity-updated",
+                        events
+                    });
+                }
+
+                if (message.type === "record-test-event") {
+                    const events = context.globalState.get<PulseEvent[]>(
+                        STORAGE_KEY,
+                        []
+                    );
+
+                    const newEvent: PulseEvent = {
+                        id: Date.now().toString(),
+                        type: "supporting",
+                        description: "Test development activity",
+                        timestamp: new Date().toISOString()
+                    };
+
+                    const updatedEvents = [
+                        newEvent,
+                        ...events
+                    ].slice(0, 500);
+
+                    await context.globalState.update(
+                        STORAGE_KEY,
+                        updatedEvents
+                    );
+
+                    panel.webview.postMessage({
+                        type: "activity-updated",
+                        events: updatedEvents
+                    });
+                }
+            });
         }
     );
 
@@ -48,19 +103,19 @@ function getDashboardHTML(
     <div id="app">
         <header>
             <div class="logo">PULSE<span>.</span></div>
-            <div class="status"><span class="status-dot"></span> TRACKING READY</div>
+            <div class="status"><span class="status-dot"></span>Tracking ready!</div>
         </header>
 
         <main>
             <section class="welcome">
-                <p class="eyebrow">YOUR DEVELOPMENT ACTIVITY</p>
+                <p class="eyebrow">Dev Activity</p>
                 <h1>Make every<br>minute <span>count.</span></h1>
-                <p class="subtitle">Your AI development journey, measured.</p>
+                <p class="subtitle">AI development, measured</p>
             </section>
 
             <section class="stats">
                 <div class="stat-card">
-                    <p>TODAY'S ACTIVITY</p>
+                    <p>Today's Activity</p>
                     <h2 id="activityCount">0</h2>
                     <span>Recorded events</span>
                 </div>
@@ -77,14 +132,14 @@ function getDashboardHTML(
                     <span>LIVE</span>
                 </div>
                 <div id="activityFeed" class="feed">
-                    <p class="empty">No activity recorded yet.</p>
+                    <p class="empty">Loading activity...</p>
                 </div>
             </section>
 
             <button id="testEvent">+ Record test activity</button>
         </main>
 
-        <footer> PULSE v0.1.0 · YOUR WORK, YOUR DATA </footer>
+        <footer>PULSE v0.1.0</footer>
     </div>
 
     <script src="${scriptUri}"></script>

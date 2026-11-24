@@ -14,7 +14,7 @@ function recordActivity(type, description) {
     };
 
     events.unshift(event);
-
+//online activity but local
     activityCount.textContent = events.length;
     aiCount.textContent = events.filter(
         item => item.type === "ai"
