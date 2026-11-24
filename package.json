@@ -9,8 +9,8 @@
     "vscode": "^1.90.0"
   },
   "categories": ["Other"],
-  
-  "browser": "./dist/extension.js",
+"main": "./dist/extension.js",
+"browser": "./dist/extension.js",
 "extensionKind": ["ui"],
   "activationEvents": ["onCommand:pulse.openDashboard"],
   "contributes": {
