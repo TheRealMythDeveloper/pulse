@@ -11,10 +11,34 @@ interface PulseEvent {
 const STORAGE_KEY = "pulse.activity";
 
 export function activate(context: vscode.ExtensionContext) {
+    let dashboard: vscode.WebviewPanel | undefined;
+        // Track the files opened in VS Code. (maybe vsdev?)
+    const fileOpened = vscode.workspace.onDidOpenTextDocument(document => {
+        if (document.uri.scheme !== "file") return;
+
+        recordActivity(context, "supporting", "Opened a file", dashboard);
+    });
+
+    // Tracking in saves
+    const fileSaved = vscode.workspace.onDidSaveTextDocument(document => {
+        if (document.uri.scheme !== "file") return;
+
+        recordActivity(context, "supporting", "Saved a file", dashboard);
+    });
+
+    // Track all edits
+    const fileEdited = vscode.workspace.onDidChangeTextDocument(event => {
+        if (event.document.uri.scheme !== "file") return;
+        if (event.contentChanges.length === 0) return;
+
+        recordActivity(context, "supporting", "Edited a file", dashboard);
+    });
+
+    context.subscriptions.push(fileOpened, fileSaved, fileEdited);
     const openDashboard = vscode.commands.registerCommand(
         "pulse.openDashboard",
         () => {
-            const panel = vscode.window.createWebviewPanel(
+            dashboard = vscode.window.createWebviewPanel(
                 "pulseDashboard",
                 "Pulse",
                 vscode.ViewColumn.One,
@@ -77,6 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(openDashboard);
+    
 }
 
 function getDashboardHTML(
@@ -146,5 +171,31 @@ function getDashboardHTML(
 </body>
 </html>`;
 }
+function recordActivity(
+    context: vscode.ExtensionContext,
+    type: string,
+    description: string, 
+    dashboard?: vscode.WebviewPanel
+) {
+    const events = context.globalState.get<PulseEvent[]>(
+        STORAGE_KEY,
+        []
+    );
 
+    const newEvent: PulseEvent = {
+        id: Date.now().toString(),
+        type,
+        description,
+        timestamp: new Date().toISOString()
+    };
+
+    const updatedEvents = [newEvent, ...events].slice(0, 500);
+
+    context.globalState.update(STORAGE_KEY, updatedEvents).then(() => {
+        dashboard?.webview.postMessage({
+            type: "activity-updated",
+            events: updatedEvents
+        });
+    });
+}
 export function deactivate() {}
