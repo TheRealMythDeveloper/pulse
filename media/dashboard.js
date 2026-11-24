@@ -1,37 +1,40 @@
 
+const vscode = acquireVsCodeApi();
+
 const activityFeed = document.getElementById("activityFeed");
 const activityCount = document.getElementById("activityCount");
 const aiCount = document.getElementById("aiCount");
 const testEvent = document.getElementById("testEvent");
 
-let events = [];
-
-function recordActivity(type, description) {
-    const event = {
-        type,
-        description,
-        timestamp: new Date()
-    };
-
-    events.unshift(event);
-//online activity but local
+function displayEvents(events) {
     activityCount.textContent = events.length;
+
     aiCount.textContent = events.filter(
-        item => item.type === "ai"
+        event => event.type === "ai"
     ).length;
 
-    activityFeed.innerHTML = "";
+    activityFeed.replaceChildren();
 
-    events.forEach(item => {
+    if (events.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "empty";
+        empty.textContent = "No activity recorded yet.";
+        activityFeed.appendChild(empty);
+        return;
+    }
+
+    events.forEach(event => {
         const entry = document.createElement("div");
         entry.className = "event";
 
         const title = document.createElement("strong");
-        title.textContent = item.description;
+        title.textContent = event.description;
 
         const time = document.createElement("small");
         time.textContent =
-            `${item.type.toUpperCase()} · ${item.timestamp.toLocaleTimeString()}`;
+            `${event.type.toUpperCase()} · ${
+                new Date(event.timestamp).toLocaleTimeString()
+            }`;
 
         entry.append(title, time);
         activityFeed.appendChild(entry);
@@ -39,5 +42,17 @@ function recordActivity(type, description) {
 }
 
 testEvent.addEventListener("click", () => {
-    recordActivity("supporting", "Test development activity");
+    vscode.postMessage({
+        type: "record-test-event"
+    });
+});
+
+window.addEventListener("message", event => {
+    if (event.data.type === "activity-updated") {
+        displayEvents(event.data.events);
+    }
+});
+
+vscode.postMessage({
+    type: "ready"
 });

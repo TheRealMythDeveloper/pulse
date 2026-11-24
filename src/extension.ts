@@ -1,58 +1,150 @@
 
-const vscode = acquireVsCodeApi();
+import * as vscode from "vscode";
 
-const activityFeed = document.getElementById("activityFeed");
-const activityCount = document.getElementById("activityCount");
-const aiCount = document.getElementById("aiCount");
-const testEvent = document.getElementById("testEvent");
-
-function displayEvents(events) {
-    activityCount.textContent = events.length;
-
-    aiCount.textContent = events.filter(
-        event => event.type === "ai"
-    ).length;
-
-    activityFeed.replaceChildren();
-
-    if (events.length === 0) {
-        const empty = document.createElement("p");
-        empty.className = "empty";
-        empty.textContent = "No activity recorded yet.";
-        activityFeed.appendChild(empty);
-        return;
-    }
-
-    events.forEach(event => {
-        const entry = document.createElement("div");
-        entry.className = "event";
-
-        const title = document.createElement("strong");
-        title.textContent = event.description;
-
-        const time = document.createElement("small");
-        time.textContent =
-            `${event.type.toUpperCase()} · ${
-                new Date(event.timestamp).toLocaleTimeString()
-            }`;
-
-        entry.append(title, time);
-        activityFeed.appendChild(entry);
-    });
+interface PulseEvent {
+    id: string;
+    type: string;
+    description: string;
+    timestamp: string;
 }
 
-testEvent.addEventListener("click", () => {
-    vscode.postMessage({
-        type: "record-test-event"
-    });
-});
+const STORAGE_KEY = "pulse.activity";
 
-window.addEventListener("message", event => {
-    if (event.data.type === "activity-updated") {
-        displayEvents(event.data.events);
-    }
-});
+export function activate(context: vscode.ExtensionContext) {
+    const openDashboard = vscode.commands.registerCommand(
+        "pulse.openDashboard",
+        () => {
+            const panel = vscode.window.createWebviewPanel(
+                "pulseDashboard",
+                "Pulse",
+                vscode.ViewColumn.One,
+                {
+                    enableScripts: true,
+                    localResourceRoots: [
+                        vscode.Uri.joinPath(context.extensionUri, "media")
+                    ]
+                }
+            );
 
-vscode.postMessage({
-    type: "ready"
-});
+            panel.webview.html = getDashboardHTML(
+                panel.webview,
+                context.extensionUri
+            );
+
+            panel.webview.onDidReceiveMessage(async message => {
+                if (message.type === "ready") {
+                    const events = context.globalState.get<PulseEvent[]>(
+                        STORAGE_KEY,
+                        []
+                    );
+
+                    panel.webview.postMessage({
+                        type: "activity-updated",
+                        events
+                    });
+                }
+
+                if (message.type === "record-test-event") {
+                    const events = context.globalState.get<PulseEvent[]>(
+                        STORAGE_KEY,
+                        []
+                    );
+
+                    const newEvent: PulseEvent = {
+                        id: Date.now().toString(),
+                        type: "supporting",
+                        description: "Test development activity",
+                        timestamp: new Date().toISOString()
+                    };
+
+                    const updatedEvents = [
+                        newEvent,
+                        ...events
+                    ].slice(0, 500);
+
+                    await context.globalState.update(
+                        STORAGE_KEY,
+                        updatedEvents
+                    );
+
+                    panel.webview.postMessage({
+                        type: "activity-updated",
+                        events: updatedEvents
+                    });
+                }
+            });
+        }
+    );
+
+    context.subscriptions.push(openDashboard);
+}
+
+function getDashboardHTML(
+    webview: vscode.Webview,
+    extensionUri: vscode.Uri
+) {
+    const scriptUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(extensionUri, "media", "dashboard.js")
+    );
+
+    const styleUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(extensionUri, "media", "dashboard.css")
+    );
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="${styleUri}" rel="stylesheet">
+    <title>Pulse</title>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="logo">PULSE<span>.</span></div>
+            <div class="status"><span class="status-dot"></span> TRACKING READY</div>
+        </header>
+
+        <main>
+            <section class="welcome">
+                <p class="eyebrow">YOUR DEVELOPMENT ACTIVITY</p>
+                <h1>Make every<br>minute <span>count.</span></h1>
+                <p class="subtitle">Your AI development journey, measured.</p>
+            </section>
+
+            <section class="stats">
+                <div class="stat-card">
+                    <p>TODAY'S ACTIVITY</p>
+                    <h2 id="activityCount">0</h2>
+                    <span>Recorded events</span>
+                </div>
+                <div class="stat-card">
+                    <p>AI INTERACTIONS</p>
+                    <h2 id="aiCount">0</h2>
+                    <span>Detected interactions</span>
+                </div>
+            </section>
+
+            <section class="activity">
+                <div class="section-heading">
+                    <h2>Activity feed</h2>
+                    <span>LIVE</span>
+                </div>
+                <div id="activityFeed" class="feed">
+                    <p class="empty">Loading activity...</p>
+                </div>
+            </section>
+
+            <button id="testEvent">+ Record test activity</button>
+        </main>
+
+        <footer>PULSE v0.1.0 · YOUR WORK, YOUR DATA</footer>
+    </div>
+
+    <script src="${scriptUri}"></script>
+</body>
+</html>`;
+}
+
+export function deactivate() {}
