@@ -14,21 +14,21 @@ export function activate(context: vscode.ExtensionContext) {
     let dashboard: vscode.WebviewPanel | undefined;
         // Track the files opened in VS Code. (maybe vsdev?)
     const fileOpened = vscode.workspace.onDidOpenTextDocument(document => {
-        if (document.uri.scheme !== "file") return;
+        
 
         recordActivity(context, "supporting", "Opened a file", dashboard);
     });
 
     // Tracking in saves
     const fileSaved = vscode.workspace.onDidSaveTextDocument(document => {
-        if (document.uri.scheme !== "file") return;
+        
 
         recordActivity(context, "supporting", "Saved a file", dashboard);
     });
 
     // Track all edits
     const fileEdited = vscode.workspace.onDidChangeTextDocument(event => {
-        if (event.document.uri.scheme !== "file") return;
+        
         if (event.contentChanges.length === 0) return;
 
         recordActivity(context, "supporting", "Edited a file", dashboard);
@@ -42,6 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
                 "pulseDashboard",
                 "Pulse",
                 vscode.ViewColumn.One,
+                
                 {
                     enableScripts: true,
                     localResourceRoots: [
@@ -49,7 +50,9 @@ export function activate(context: vscode.ExtensionContext) {
                     ]
                 }
             );
-
+dashboard.onDidDispose(() => {
+    dashboard = undefined;
+});
             dashboard.webview.html = getDashboardHTML(
                 dashboard.webview,
                 context.extensionUri
