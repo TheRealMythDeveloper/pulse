@@ -25,8 +25,11 @@ jobs:
       - name: Build Pulse
         run: npm run build
 
-      - name: Save browser extension build
+      - name: Package Pulse
+        run: npm run package
+
+      - name: Save extension package
         uses: actions/upload-artifact@v4
         with:
-          name: pulse-browser-build
-          path: dist/
+          name: pulse-extension
+          path: "*.vsix"
