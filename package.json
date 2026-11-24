@@ -1,0 +1,30 @@
+
+{
+  "name": "pulse",
+  "displayName": "Pulse",
+  "description": "Privacy-conscious AI development activity tracker",
+  "version": "0.1.0",
+  "publisher": "mythos-studios",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other"],
+  "browser": "./dist/extension.js",
+  "activationEvents": ["onCommand:pulse.openDashboard"],
+  "contributes": {
+    "commands": [
+      {
+        "command": "pulse.openDashboard",
+        "title": "Pulse: Open Dashboard"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.5.0"
+  }
+}

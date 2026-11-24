@@ -1,0 +1,151 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #101116;
+    color: #f1f1f5;
+    font-family: Arial, sans-serif;
+}
+
+#app {
+    max-width: 850px;
+    margin: auto;
+    padding: 30px;
+}
+
+header, .section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 23px;
+    font-weight: 900;
+    letter-spacing: 3px;
+}
+
+.logo span, .welcome h1 span {
+    color: #a78bfa;
+}
+
+.status, .eyebrow, .stat-card p, footer {
+    color: #9293a1;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #70d9a0;
+    border-radius: 50%;
+    margin-right: 7px;
+}
+
+.welcome {
+    margin: 75px 0 45px;
+}
+
+.welcome h1 {
+    font-size: clamp(42px, 8vw, 70px);
+    line-height: 1.05;
+    margin: 15px 0;
+}
+
+.subtitle, .stat-card span {
+    color: #a1a1ad;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.stat-card {
+    background: #1a1b23;
+    border: 1px solid #292a35;
+    border-radius: 12px;
+    padding: 22px;
+}
+
+.stat-card h2 {
+    font-size: 38px;
+    margin: 15px 0 5px;
+}
+
+.activity {
+    margin-top: 45px;
+}
+
+.section-heading h2 {
+    font-size: 19px;
+}
+
+.section-heading span {
+    color: #a78bfa;
+    font-size: 11px;
+    letter-spacing: 2px;
+}
+
+.feed {
+    background: #1a1b23;
+    border: 1px solid #292a35;
+    border-radius: 12px;
+    padding: 18px;
+    min-height: 100px;
+}
+
+.empty {
+    color: #777987;
+    text-align: center;
+}
+
+.event {
+    padding: 12px 0;
+    border-bottom: 1px solid #30313a;
+}
+
+.event:last-child {
+    border-bottom: none;
+}
+
+.event small {
+    display: block;
+    color: #9293a1;
+    margin-top: 5px;
+}
+
+button {
+    margin-top: 20px;
+    padding: 13px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #a78bfa;
+    color: #15131e;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #bba8ff;
+}
+
+footer {
+    margin-top: 55px;
+}
+
+@media (max-width: 500px) {
+    #app {
+        padding: 20px;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+}
