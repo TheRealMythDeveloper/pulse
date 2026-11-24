@@ -50,19 +50,19 @@ export function activate(context: vscode.ExtensionContext) {
                 }
             );
 
-            panel.webview.html = getDashboardHTML(
-                panel.webview,
+            dashboard.webview.html = getDashboardHTML(
+                dashboard.webview,
                 context.extensionUri
             );
 
-            panel.webview.onDidReceiveMessage(async message => {
+            dashboard.webview.onDidReceiveMessage(async message => {
                 if (message.type === "ready") {
                     const events = context.globalState.get<PulseEvent[]>(
                         STORAGE_KEY,
                         []
                     );
 
-                    panel.webview.postMessage({
+                    dashboard.webview.postMessage({
                         type: "activity-updated",
                         events
                     });
@@ -91,7 +91,7 @@ export function activate(context: vscode.ExtensionContext) {
                         updatedEvents
                     );
 
-                    panel.webview.postMessage({
+                    dashboard.webview.postMessage({
                         type: "activity-updated",
                         events: updatedEvents
                     });
