@@ -11,7 +11,7 @@
   "categories": ["Other"],
   
   "browser": "./dist/extension.js",
-"extensionKind": ["web"],
+"extensionKind": ["ui"],
   "activationEvents": ["onCommand:pulse.openDashboard"],
   "contributes": {
     "commands": [
